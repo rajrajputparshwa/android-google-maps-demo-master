@@ -40,7 +40,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONObject;
 
@@ -92,7 +91,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
         mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
-        token = FirebaseInstanceId.getInstance().getToken();
+       /* token = FirebaseInstanceId.getInstance().getToken();*/
 
         if (TextUtils.isEmpty(getResources().getString(R.string.google_maps_api_key))) {
             throw new IllegalStateException("You forgot to supply a Google Maps API key");
@@ -281,11 +280,11 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
         if (markerCount == 1) {
-            String msg = "Updated Locations :- " +
+            String msg = "Updated Locations : " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
 
-            userId = FirebaseInstanceId.getInstance().getToken();
+            userId ="driver1";
 
             mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
@@ -303,7 +302,7 @@ public class MapDemoActivity extends AppCompatActivity {
                     Double.toString(location.getLongitude());
 
 
-            userId = FirebaseInstanceId.getInstance().getToken();
+            userId = "driver1";
 
             mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
@@ -524,7 +523,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
             final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
-            valueAnimator.setDuration(1000); // duration 1 second
+            valueAnimator.setDuration(1500); // duration 1 second
             valueAnimator.setInterpolator(new LinearInterpolator());
             valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
