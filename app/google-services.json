@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "707569766705",
+    "firebase_url": "https://newtracker-b33dd.firebaseio.com",
+    "project_id": "newtracker-b33dd",
+    "storage_bucket": "newtracker-b33dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707569766705:android:c789e8a2b96d1520",
+        "android_client_info": {
+          "package_name": "com.example.mapdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "707569766705-qtc6i8vjvd0os1kah1le3dqoj9o2cr17.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD-5DTFbaG4fHrJyI2KZy1_zh5YsyKraw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

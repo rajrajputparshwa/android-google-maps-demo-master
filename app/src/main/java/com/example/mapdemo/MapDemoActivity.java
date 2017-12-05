@@ -38,6 +38,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONObject;
 
@@ -61,8 +64,12 @@ public class MapDemoActivity extends AppCompatActivity {
     private LocationRequest mLocationRequest;
     Location mCurrentLocation;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
-    private long FASTEST_INTERVAL = 500; /* 5 secs */
+    private long FASTEST_INTERVAL = 5000; /* 5 secs */
     private int markerCount;
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
+    public  String userId;
+    String token;
 
 
     private final static String KEY_LOCATION = "location";
@@ -78,6 +85,14 @@ public class MapDemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_demo_activity);
         markerCount = 0;
+
+
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+
+
+        mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+
+        token = FirebaseInstanceId.getInstance().getToken();
 
         if (TextUtils.isEmpty(getResources().getString(R.string.google_maps_api_key))) {
             throw new IllegalStateException("You forgot to supply a Google Maps API key");
@@ -266,6 +281,18 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
         if (markerCount == 1) {
+            String msg = "Updated Locations :- " +
+                    Double.toString(location.getLatitude()) + "," +
+                    Double.toString(location.getLongitude());
+
+            userId = FirebaseInstanceId.getInstance().getToken();
+
+            mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
+
+            mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
+
+
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
             animateMarker(location, mk);
 
         } else if (markerCount == 0) {
@@ -274,6 +301,13 @@ public class MapDemoActivity extends AppCompatActivity {
             String msg = "Updated Location: " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
+
+
+            userId = FirebaseInstanceId.getInstance().getToken();
+
+            mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
+
+            mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
 
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
@@ -543,6 +577,13 @@ public class MapDemoActivity extends AppCompatActivity {
         float result = fraction * rotation + start;
         return (result + 360) % 360;
     }
+    private void updateUser(String name, String email) {
+        // updating the user via child nodes
+        if (!TextUtils.isEmpty(name))
+            mFirebaseDatabase.child(userId).child("lat").setValue(name);
 
+        if (!TextUtils.isEmpty(email))
+            mFirebaseDatabase.child(userId).child("log").setValue(email);
+    }
 
 }
