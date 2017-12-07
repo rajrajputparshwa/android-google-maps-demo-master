@@ -3,6 +3,7 @@ package com.example.mapdemo;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -63,11 +64,11 @@ public class MapDemoActivity extends AppCompatActivity {
     private LocationRequest mLocationRequest;
     Location mCurrentLocation;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
-    private long FASTEST_INTERVAL = 1000; /* 5 secs */
+    private long FASTEST_INTERVAL = 5000; /* 5 secs */
     private int markerCount;
     private DatabaseReference mFirebaseDatabase;
     private FirebaseDatabase mFirebaseInstance;
-    public  String userId;
+    public String userId;
     String token;
 
 
@@ -78,6 +79,12 @@ public class MapDemoActivity extends AppCompatActivity {
      * returned in Activity.onActivityResult
      */
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        startService(new Intent(this, MyService.class));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -280,19 +287,21 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
         if (markerCount == 1) {
-            String msg = "Updated Locations : " +
-                    Double.toString(location.getLatitude()) + "," +
-                    Double.toString(location.getLongitude());
 
-            userId ="driver1";
+            userId = "driver1";
+
 
             mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
             mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
+            animateMarker(location, mk);
+            String msg = "Updated Locations : " +
+                    Double.toString(location.getLatitude()) + "," +
+                    Double.toString(location.getLongitude());
 
 
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            animateMarker(location, mk);
+
 
         } else if (markerCount == 0) {
 
@@ -337,7 +346,7 @@ public class MapDemoActivity extends AppCompatActivity {
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 15);
             map.animateCamera(cameraUpdate);
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            markerCount=1;
+            markerCount = 1;
 
         }
 
@@ -576,6 +585,7 @@ public class MapDemoActivity extends AppCompatActivity {
         float result = fraction * rotation + start;
         return (result + 360) % 360;
     }
+
     private void updateUser(String name, String email) {
         // updating the user via child nodes
         if (!TextUtils.isEmpty(name))
