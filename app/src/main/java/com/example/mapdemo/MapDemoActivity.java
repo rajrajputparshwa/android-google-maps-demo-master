@@ -64,7 +64,7 @@ public class MapDemoActivity extends AppCompatActivity {
     private LocationRequest mLocationRequest;
     Location mCurrentLocation;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
-    private long FASTEST_INTERVAL = 5000; /* 5 secs */
+    private long FASTEST_INTERVAL = 1000; /* 5 secs */
     private int markerCount;
     private DatabaseReference mFirebaseDatabase;
     private FirebaseDatabase mFirebaseInstance;
@@ -83,7 +83,7 @@ public class MapDemoActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        startService(new Intent(this, MyService.class));
+        startService(new Intent(this, GPS_Service.class));
     }
 
     @Override
@@ -243,7 +243,7 @@ public class MapDemoActivity extends AppCompatActivity {
     @NeedsPermission({Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION})
     protected void startLocationUpdates() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
@@ -291,6 +291,11 @@ public class MapDemoActivity extends AppCompatActivity {
             userId = "driver1";
 
 
+            mFirebaseInstance = FirebaseDatabase.getInstance();
+
+
+            mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+
             mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
             mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
@@ -309,6 +314,11 @@ public class MapDemoActivity extends AppCompatActivity {
             String msg = "Updated Location: " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
+
+            mFirebaseInstance = FirebaseDatabase.getInstance();
+
+
+            mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
 
             userId = "driver1";
@@ -330,7 +340,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
             mk = map.addMarker(new MarkerOptions()
                     .position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
-                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_car)));
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions

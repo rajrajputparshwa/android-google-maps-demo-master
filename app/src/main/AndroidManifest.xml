@@ -48,10 +48,9 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <service android:name=".GPS_Service"/>
 
-        <service
-            android:name=".MyService"
-            android:enabled="true" />
+
     </application>
 
 </manifest>
