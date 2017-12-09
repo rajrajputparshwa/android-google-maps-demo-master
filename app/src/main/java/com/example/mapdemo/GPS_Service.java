@@ -54,14 +54,25 @@ public class GPS_Service extends Service {
                 mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
 
-                mFirebaseDatabase.child("driver1").child("lat").setValue(location.getLatitude());
+                mFirebaseDatabase.child("driver2").child("lat").setValue(location.getLatitude());
 
-                mFirebaseDatabase.child("driver1").child("log").setValue(location.getLongitude());
+                mFirebaseDatabase.child("driver2").child("log").setValue(location.getLongitude());
+
+                mFirebaseDatabase.child("driver2").child("bearing").setValue(location.getBearing());
 
 
                 Log.e("latitude", " " + location.getLatitude());
 
                 Log.e("logitude", " " + location.getLongitude());
+
+                Log.e("Bearing", " " + location.getBearing());
+
+            /*    String msg = "Updated Locations : " +
+                        Double.toString(location.getLatitude()) + "," +
+                        Double.toString(location.getLongitude());
+
+
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();*/
 
 
             }
@@ -100,8 +111,8 @@ public class GPS_Service extends Service {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener);
 
         Criteria criteria = new Criteria();
-        criteria.setPowerRequirement(Criteria.POWER_HIGH);
-        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setSpeedRequired(true);
         criteria.setAltitudeRequired(false);
         criteria.setBearingRequired(false);

@@ -83,7 +83,7 @@ public class MapDemoActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        startService(new Intent(this, GPS_Service.class));
+
     }
 
     @Override
@@ -229,9 +229,6 @@ public class MapDemoActivity extends AppCompatActivity {
         if (mCurrentLocation != null) {
             Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
             LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-            map.addMarker(new MarkerOptions()
-                    .position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
-                    .title("home"));
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
             map.animateCamera(cameraUpdate);
         } else {
@@ -287,25 +284,18 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
         if (markerCount == 1) {
-
-            userId = "driver1";
-
-
-            mFirebaseInstance = FirebaseDatabase.getInstance();
+            mCurrentLocation = location;
+            LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
 
-            mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+            startService(new Intent(this, GPS_Service.class));
 
-            mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
-            mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
+            map.animateCamera(cameraUpdate);
+
+
             animateMarker(location, mk);
-            String msg = "Updated Locations : " +
-                    Double.toString(location.getLatitude()) + "," +
-                    Double.toString(location.getLongitude());
-
-
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
 
         } else if (markerCount == 0) {
@@ -321,11 +311,13 @@ public class MapDemoActivity extends AppCompatActivity {
             mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
 
-            userId = "driver1";
+            userId = "driver2";
 
             mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
 
             mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
+
+            mFirebaseDatabase.child(userId).child("bearing").setValue(location.getBearing());
 
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
@@ -333,13 +325,15 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
             String url = getMapsApiDirectionsUrl(latlngOne, latlngTwo);
-            ReadTask downloadTask = new ReadTask();
+         /*   ReadTask downloadTask = new ReadTask();
             // Start downloading json data from Google Directions API
             downloadTask.execute(url);
-
+*/
 
             mk = map.addMarker(new MarkerOptions()
                     .position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
+                    .flat(true)
+                    .anchor(0.5f, 0.5f)
                     .title("office").icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_car)));
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -352,10 +346,11 @@ public class MapDemoActivity extends AppCompatActivity {
                 return;
             }
             map.setMyLocationEnabled(true);
-            map.addMarker(new MarkerOptions().position(new LatLng(23.6133995, 72.4082554)).title("home"));
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 15);
+     /*       map.addMarker(new MarkerOptions().position(new LatLng(23.6133995, 72.4082554)).title("home"));*/
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT)
+                    .show();
             markerCount = 1;
 
         }
@@ -542,7 +537,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
             final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
-            valueAnimator.setDuration(5000); // duration 1 second
+            valueAnimator.setDuration(1000); // duration 1 second
             valueAnimator.setInterpolator(new LinearInterpolator());
             valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
@@ -552,6 +547,7 @@ public class MapDemoActivity extends AppCompatActivity {
                         LatLng newPosition = latLngInterpolator.interpolate(v, startPosition, endPosition);
                         marker.setPosition(newPosition);
                         marker.setRotation(computeRotation(v, startRotation, destination.getBearing()));
+
                     } catch (Exception ex) {
                         // I don't care atm..
                     }
