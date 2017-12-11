@@ -29,6 +29,9 @@ public class GPS_Service extends Service {
     Context context = this;
     private DatabaseReference mFirebaseDatabase;
     private FirebaseDatabase mFirebaseInstance;
+    String name;
+    Intent intent;
+    Pref_Master pref_master;
 
 
     @Nullable
@@ -40,6 +43,11 @@ public class GPS_Service extends Service {
     @Override
     public void onCreate() {
 
+
+        pref_master = new Pref_Master(context);
+        name = pref_master.getUID();
+
+
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -50,15 +58,13 @@ public class GPS_Service extends Service {
 
                 mFirebaseInstance = FirebaseDatabase.getInstance();
 
-
                 mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
+                mFirebaseDatabase.child(name).child("lat").setValue(location.getLatitude());
 
-                mFirebaseDatabase.child("driver2").child("lat").setValue(location.getLatitude());
+                mFirebaseDatabase.child(name).child("log").setValue(location.getLongitude());
 
-                mFirebaseDatabase.child("driver2").child("log").setValue(location.getLongitude());
-
-                mFirebaseDatabase.child("driver2").child("bearing").setValue(location.getBearing());
+                mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
 
 
                 Log.e("latitude", " " + location.getLatitude());

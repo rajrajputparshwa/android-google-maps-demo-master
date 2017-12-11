@@ -3,6 +3,7 @@ package com.example.mapdemo;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -70,6 +71,9 @@ public class MapDemoActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseInstance;
     public String userId;
     String token;
+    Pref_Master pref_master;
+    String userName;
+    Context context = this;
 
 
     private final static String KEY_LOCATION = "location";
@@ -91,7 +95,15 @@ public class MapDemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_demo_activity);
         markerCount = 0;
+        pref_master = new Pref_Master(context);
 
+        Bundle extras = getIntent().getExtras();
+
+        if (extras != null) {
+            // and get whatever type user account id is
+        }
+
+        userName = pref_master.getUID();
 
         mFirebaseInstance = FirebaseDatabase.getInstance();
 
@@ -288,7 +300,8 @@ public class MapDemoActivity extends AppCompatActivity {
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
 
-            startService(new Intent(this, GPS_Service.class));
+            Intent i = new Intent(getApplicationContext(), GPS_Service.class);
+            startService(i);
 
 
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
@@ -311,13 +324,11 @@ public class MapDemoActivity extends AppCompatActivity {
             mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
 
-            userId = "driver2";
+            mFirebaseDatabase.child(userName).child("lat").setValue(location.getLatitude());
 
-            mFirebaseDatabase.child(userId).child("lat").setValue(location.getLatitude());
+            mFirebaseDatabase.child(userName).child("log").setValue(location.getLongitude());
 
-            mFirebaseDatabase.child(userId).child("log").setValue(location.getLongitude());
-
-            mFirebaseDatabase.child(userId).child("bearing").setValue(location.getBearing());
+            mFirebaseDatabase.child(userName).child("bearing").setValue(location.getBearing());
 
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 

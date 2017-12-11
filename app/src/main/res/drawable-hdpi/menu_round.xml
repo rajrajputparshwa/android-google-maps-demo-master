@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:maxLevel="0">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+            android:shape="rectangle">
+            <gradient
+                android:endColor="#000"
+                android:startColor="#000" />
+            <corners
+                android:bottomLeftRadius="11dp"
+                android:bottomRightRadius="11dp"
+                android:topLeftRadius="11dp"
+                android:topRightRadius="11dp" />
+        </shape>
+    </item>
+    <item android:maxLevel="1">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+            android:shape="rectangle">
+            <gradient
+                android:endColor="#fff"
+                android:startColor="#fff" />
+            <corners
+                android:bottomLeftRadius="11dp"
+                android:bottomRightRadius="11dp"
+                android:topLeftRadius="11dp"
+                android:topRightRadius="11dp" />
+        </shape>
+    </item>
+
+
+</level-list>
+
