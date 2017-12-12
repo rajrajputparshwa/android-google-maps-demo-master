@@ -20,7 +20,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 /**
- * Created by filipp on 6/16/2016.
+ * Created by raj on 6/16/2016.
  */
 public class GPS_Service extends Service {
 

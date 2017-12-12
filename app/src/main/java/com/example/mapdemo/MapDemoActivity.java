@@ -300,9 +300,6 @@ public class MapDemoActivity extends AppCompatActivity {
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
 
-            Intent i = new Intent(getApplicationContext(), GPS_Service.class);
-            startService(i);
-
 
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
@@ -312,6 +309,11 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
         } else if (markerCount == 0) {
+
+
+            Intent i = new Intent(getApplicationContext(), GPS_Service.class);
+            startService(i);
+
 
             mCurrentLocation = location;
             String msg = "Updated Location: " +
