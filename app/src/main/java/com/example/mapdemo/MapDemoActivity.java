@@ -319,7 +319,7 @@ public class MapDemoActivity extends AppCompatActivity {
             String msg = "Updated Location: " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
-
+/*
             mFirebaseInstance = FirebaseDatabase.getInstance();
 
 
@@ -330,7 +330,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
             mFirebaseDatabase.child(userName).child("log").setValue(location.getLongitude());
 
-            mFirebaseDatabase.child(userName).child("bearing").setValue(location.getBearing());
+            mFirebaseDatabase.child(userName).child("bearing").setValue(location.getBearing());*/
 
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
