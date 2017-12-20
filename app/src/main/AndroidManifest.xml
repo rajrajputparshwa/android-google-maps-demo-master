@@ -45,6 +45,11 @@
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_api_key" />
+
+<!--
+        key used from  API key 1 from SampleMap project in raj.rajput@parshwatechnologies.in account
+-->
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

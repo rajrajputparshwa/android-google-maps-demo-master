@@ -9,6 +9,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,8 +24,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import java.text.DecimalFormat;
 
 import static android.content.ContentValues.TAG;
 
@@ -46,6 +45,8 @@ public class GPS_Service extends Service implements com.google.android.gms.locat
     private LocationRequest mLocationRequest;
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
     private GoogleApiClient mGoogleApiClient;
+    Location locations;
+    Handler handler;
 
     @Nullable
     @Override
@@ -147,7 +148,11 @@ public class GPS_Service extends Service implements com.google.android.gms.locat
 
 
         // Displaying the new location on UI
-        displayLocation(location);
+
+
+                Log.e("Handler","Handler");
+                displayLocation(mLastLocation);
+
     }
 
     protected void stopLocationUpdates() {
@@ -164,7 +169,8 @@ public class GPS_Service extends Service implements com.google.android.gms.locat
             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            // for ActivityCompat#requestPermissions fo
+            // r more details.
             return;
         }
         mLastLocation = LocationServices.FusedLocationApi
@@ -180,23 +186,24 @@ public class GPS_Service extends Service implements com.google.android.gms.locat
             mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
 
-            DecimalFormat decimalFormat = new DecimalFormat("#.#########");
-            float latitudes = Float.valueOf(decimalFormat.format(location.getLatitude()));
-            Log.e("Lat", "" + latitudes);
-            float logitudes = Float.valueOf(decimalFormat.format(location.getLongitude()));
-            Log.e("Lng", "" + logitudes);
+
+            locations = new Location("");
+            locations.setLatitude(location.getLatitude());
+            locations.setLongitude(location.getLongitude());
 
 
-            mFirebaseDatabase.child(name).child("lat").setValue(latitudes);
+            mFirebaseDatabase.child(name).child("lat").setValue(location.getLatitude());
 
-            mFirebaseDatabase.child(name).child("log").setValue(logitudes);
+            mFirebaseDatabase.child(name).child("log").setValue(location.getLongitude());
 
             mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
 
+            mFirebaseDatabase.child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
 
-            Log.e("latitude", " " + latitudes);
 
-            Log.e("logitude", " " + longitude);
+            Log.e("latitude", " " + location.getLatitude());
+
+            Log.e("logitude", " " + location.getLongitude());
 
             Log.e("Bearing", " " + location.getBearing());
 
@@ -207,9 +214,6 @@ public class GPS_Service extends Service implements com.google.android.gms.locat
 
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();*/
 
-
-            Log.e("Lat", "" + latitudes);
-            Log.e("Log", "" + logitudes);
 
         } else {
 

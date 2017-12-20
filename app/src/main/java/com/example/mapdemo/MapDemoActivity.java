@@ -35,6 +35,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -243,6 +244,11 @@ public class MapDemoActivity extends AppCompatActivity {
             LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
             map.animateCamera(cameraUpdate);
+            map.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            context, R.raw.map_style));
+
+
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();
         }
@@ -303,6 +309,12 @@ public class MapDemoActivity extends AppCompatActivity {
 
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
+            map.setBuildingsEnabled(true);
+            map.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            context, R.raw.map_style));
+
+
 
 
             animateMarker(location, mk);
@@ -347,7 +359,7 @@ public class MapDemoActivity extends AppCompatActivity {
                     .position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
                     .flat(true)
                     .anchor(0.5f, 0.5f)
-                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_car)));
+                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -362,6 +374,11 @@ public class MapDemoActivity extends AppCompatActivity {
      /*       map.addMarker(new MarkerOptions().position(new LatLng(23.6133995, 72.4082554)).title("home"));*/
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
+            map.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            context, R.raw.map_style));
+
+
             Toast.makeText(this, msg, Toast.LENGTH_SHORT)
                     .show();
             markerCount = 1;
