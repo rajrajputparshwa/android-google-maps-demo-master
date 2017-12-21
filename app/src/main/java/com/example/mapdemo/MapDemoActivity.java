@@ -88,6 +88,8 @@ public class MapDemoActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        Intent i = new Intent(getApplicationContext(), GPS_Service.class);
+        startService(i);
 
     }
 
@@ -328,7 +330,7 @@ public class MapDemoActivity extends AppCompatActivity {
 
 
             mCurrentLocation = location;
-            String msg = "Updated Location: " +
+            String msg = "Updated Locationsss: " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
 /*
