@@ -22,6 +22,8 @@ public class DialogBox extends Activity {
         final EditText edittext = v.findViewById(R.id.edittext);
 
 
+
+
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
