@@ -42,6 +42,8 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
     }
 
     @Override
+
+
     public void onCreate() {
 
 
@@ -80,7 +82,6 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
             public void onLocationChanged(Location location) {
 
 
-
                 mFirebaseInstance = FirebaseDatabase.getInstance();
 
                 mFirebaseDatabase = mFirebaseInstance.getReference("cars");
@@ -92,7 +93,6 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
                 mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
 
                 mFirebaseDatabase.child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
-
 
 
                 Log.e("latitude", " " + location.getLatitude());
