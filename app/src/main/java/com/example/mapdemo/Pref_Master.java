@@ -13,6 +13,10 @@ public class Pref_Master {
     private String user_id = "0";
 
 
+    private String str_destination = "destination";
+    private String str_user_des = "0";
+
+
     // 0 = English , 1 = Arabic , 3 = first
     Context context;
 
@@ -26,6 +30,9 @@ public class Pref_Master {
     }
 
 
+    public String getStr_destination() {
+        return pref.getString(str_destination, str_user_des);
+    }
 
 
     public void setUID(String name) {
@@ -33,6 +40,14 @@ public class Pref_Master {
         editor.putString(str_user_id, name);
         editor.apply();
     }
+
+
+    public void setStr_destination(String name) {
+        editor = pref.edit();
+        editor.putString(str_destination, name);
+        editor.apply();
+    }
+
 
     public void clear_pref() {
         pref.edit().clear().apply();

@@ -14,6 +14,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -33,7 +35,18 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
     String name;
     Pref_Master pref_master;
     GoogleApiClient mGoogleApiClient;
+    Location destination;
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (destination != null) {
+            destination = (Location) intent.getExtras().get("data");
+        }
+
+
+        return START_STICKY;
+    }
 
     @Nullable
     @Override
@@ -82,35 +95,41 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
             public void onLocationChanged(Location location) {
 
 
-                mFirebaseInstance = FirebaseDatabase.getInstance();
+                if (destination != null) {
+                    float d = location.distanceTo(destination);
+                    /*distanceaway.setText("KMS away from your location :" + d / 1000);*/
 
-                mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+                    Log.e("Distancebetween", " " + d / 1000);
+                } else {
+                    mFirebaseInstance = FirebaseDatabase.getInstance();
 
-                mFirebaseDatabase.child(name).child("lat").setValue(location.getLatitude());
+                    mFirebaseDatabase = mFirebaseInstance.getReference("cars");
 
-                mFirebaseDatabase.child(name).child("log").setValue(location.getLongitude());
+                    GeoFire geoFire = new GeoFire(mFirebaseDatabase);
+                    geoFire.setLocation(name, new GeoLocation(location.getLatitude(), location.getLongitude()));
 
-                mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
-
-                mFirebaseDatabase.child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
+/*
 
 
-                Log.e("latitude", " " + location.getLatitude());
+                    mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
 
-                Log.e("logitude", " " + location.getLongitude());
+                    mFirebaseDatabase.child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
 
-                Log.e("Bearing", " " + location.getBearing());
+*/
 
-                Log.e("Speed", " " + ((location.getSpeed() * 3600) / 1000));
+                    Log.e("latitude", " " + location.getLatitude());
+
+                    Log.e("logitude", " " + location.getLongitude());
+
+                    Log.e("Bearing", " " + location.getBearing());
+
+                    Log.e("Speed", " " + ((location.getSpeed() * 3600) / 1000));
 
             /*    String msg = "Updated Locations : " +
                         Double.toString(location.getLatitude()) + "," +
                         Double.toString(location.getLongitude());
-
-
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();*/
-
-
+                }
             }
 
             @Override

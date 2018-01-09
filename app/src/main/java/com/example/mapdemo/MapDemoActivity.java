@@ -8,19 +8,25 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.view.animation.LinearInterpolator;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -38,6 +44,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -59,7 +66,7 @@ import java.util.List;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 @RuntimePermissions
-public class MapDemoActivity extends AppCompatActivity {
+public class MapDemoActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private SupportMapFragment mapFragment;
     private GoogleMap map;
@@ -73,8 +80,22 @@ public class MapDemoActivity extends AppCompatActivity {
     public String userId;
     String token;
     Pref_Master pref_master;
+    Location getmCurrentLocation;
     String userName;
     Context context = this;
+    Location destination;
+    LocationManager locationManager;
+    Button distanceaway, start, stop;
+    GoogleApiClient mGoogleApiClient;
+    LatLng latLng;
+    List<LatLng> routePoints;
+    private ArrayList<LatLng> points; //added
+    Polyline line; //added
+    Double lati, lng;
+    Boolean drawline = false;
+    Location newlocation, oldlocation;
+    int startcalculate = 0;
+    float olddistance;
 
 
     private final static String KEY_LOCATION = "location";
@@ -97,21 +118,68 @@ public class MapDemoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_demo_activity);
+        distanceaway = findViewById(R.id.distanceaway);
+        start = findViewById(R.id.start);
+        stop = findViewById(R.id.stop);
         markerCount = 0;
         pref_master = new Pref_Master(context);
 
-        Bundle extras = getIntent().getExtras();
+        userName = pref_master.getUID();
+        points = new ArrayList<LatLng>(); //added
 
-        if (extras != null) {
-            // and get whatever type user account id is
+        stop.setVisibility(View.GONE);
+        distanceaway.setVisibility(View.GONE);
+        start.setVisibility(View.GONE);
+
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                lati = mCurrentLocation.getLatitude();
+                lng = mCurrentLocation.getLongitude();
+
+                drawline = true;
+
+                start.setVisibility(View.GONE);
+            }
+        });
+
+
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+            /*    String url = getMapsApiDirectionsUrl(latLng, new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                ReadTask downloadTask = new ReadTask();
+                // Start downloading json data from Google Directions API
+                downloadTask.execute(url);*/
+                stop.setVisibility(View.GONE);
+                distanceaway.setVisibility(View.VISIBLE);
+
+            }
+        });
+
+
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
         }
 
-        userName = pref_master.getUID();
 
         mFirebaseInstance = FirebaseDatabase.getInstance();
 
 
         mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+
+
+
 
        /* token = FirebaseInstanceId.getInstance().getToken();*/
 
@@ -129,7 +197,28 @@ public class MapDemoActivity extends AppCompatActivity {
         if (mapFragment != null) {
             mapFragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
-                public void onMapReady(GoogleMap map) {
+                public void onMapReady(final GoogleMap map) {
+
+                    map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                        @Override
+                        public void onMapClick(LatLng latLng) {
+
+
+                            destination = new Location("");
+                            destination.setLatitude(latLng.latitude);
+                            destination.setLongitude(latLng.longitude);
+                            map.addMarker(new MarkerOptions()
+                                    .position(new LatLng(latLng.latitude, latLng.longitude))
+                            );
+                       /*     String url = getMapsApiDirectionsUrl(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()), new LatLng(latLng.latitude, latLng.longitude));
+                            ReadTask downloadTask = new ReadTask();
+                            // Start downloading json data from Google Directions API
+                            downloadTask.execute(url);
+*/
+
+                        }
+                    });
+
                     loadMap(map);
                 }
             });
@@ -308,15 +397,12 @@ public class MapDemoActivity extends AppCompatActivity {
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
 
-
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 20);
             map.animateCamera(cameraUpdate);
             map.setBuildingsEnabled(true);
             map.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             context, R.raw.map_style));
-
-
 
 
             animateMarker(location, mk);
@@ -351,17 +437,16 @@ public class MapDemoActivity extends AppCompatActivity {
             LatLng latlngTwo = new LatLng(23.6133995, 72.4082554);
 
 
-            String url = getMapsApiDirectionsUrl(latlngOne, latlngTwo);
-         /*   ReadTask downloadTask = new ReadTask();
+          /*  String url = getMapsApiDirectionsUrl(latlngOne, latlngTwo);
+           ReadTask downloadTask = new ReadTask();
             // Start downloading json data from Google Directions API
-            downloadTask.execute(url);
-*/
-
+            downloadTask.execute(url);*/
+/*
             mk = map.addMarker(new MarkerOptions()
                     .position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
                     .flat(true)
                     .anchor(0.5f, 0.5f)
-                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+                    .title("office").icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));*/
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -374,7 +459,7 @@ public class MapDemoActivity extends AppCompatActivity {
             }
             map.setMyLocationEnabled(true);
      /*       map.addMarker(new MarkerOptions().position(new LatLng(23.6133995, 72.4082554)).title("home"));*/
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 20);
             map.animateCamera(cameraUpdate);
             map.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
@@ -385,6 +470,7 @@ public class MapDemoActivity extends AppCompatActivity {
                     .show();
             markerCount = 1;
 
+
         }
 
 
@@ -393,6 +479,119 @@ public class MapDemoActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
         super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        start.setVisibility(View.VISIBLE);
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+
+                if (drawline) {
+
+
+                    if (startcalculate == 1) {
+                        newlocation = new Location("");
+                        newlocation.setLatitude(location.getLatitude());
+                        newlocation.setLongitude(location.getLongitude());
+
+                        float distance = olddistance + oldlocation.distanceTo(newlocation);
+                        olddistance = distance;
+
+                        Log.e("Newlocation", " " + newlocation);
+                        Log.e("OLdlocation", " " + oldlocation);
+                        Log.e("Distance", " " + olddistance);
+
+
+                    }
+
+
+                    oldlocation = new Location("");
+                    oldlocation.setLatitude(location.getLatitude());
+                    oldlocation.setLongitude(location.getLongitude());
+
+
+                    if (startcalculate == 0) {
+                        Location pickuplocation = new Location("");
+                        pickuplocation.setLatitude(lati);
+                        pickuplocation.setLongitude(lng);
+
+
+                        float pickupdistance = pickuplocation.distanceTo(oldlocation);
+                        Log.e("PickupDistance", " " + pickupdistance);
+
+                        olddistance = pickupdistance;
+                    }
+
+
+                    double latitude = mCurrentLocation.getLatitude();
+                    double longitude = mCurrentLocation.getLongitude();
+
+                    LatLng latLng = new LatLng(latitude, longitude); //you already have this
+                    points.add(latLng); //added
+
+                    start.setVisibility(View.GONE);
+                    stop.setVisibility(View.GONE);
+
+                    redrawLine();//added
+                    startcalculate = 1;
+                }
+
+
+
+
+
+
+                /*if (destination != null) {
+                    float d = location.distanceTo(destination);
+                    distanceaway.setText("KMS away from your location :" + d / 1000);
+                    Log.e("Distancebetween", " " + d / 1000);
+                }*/
+
+   /*
+
+
+                LatLng mapPoint = new LatLng(location.getLatitude(), location.getLongitude());
+                routePoints.add(mapPoint);
+                Polyline route = map.addPolyline(new PolylineOptions());
+                route.setPoints(routePoints);
+
+*/
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 
     // Define a DialogFragment that displays the error dialog
@@ -441,9 +640,9 @@ public class MapDemoActivity extends AppCompatActivity {
         // Building the url to the web service
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
 
+        Log.e("URL", "" + url);
 
         return url;
-
     }
 
 
@@ -504,40 +703,62 @@ public class MapDemoActivity extends AppCompatActivity {
         }
     }
 
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
-    private class ParserTask extends AsyncTask<String, Integer,
-            List<List<HashMap<String, String>>>> {
+        // Parsing the data in non-ui thread
         @Override
-        protected List<List<HashMap<String, String>>> doInBackground(
-                String... jsonData) {
-            // TODO Auto-generated method stub
+        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
+
             JSONObject jObject;
             List<List<HashMap<String, String>>> routes = null;
+
             try {
                 jObject = new JSONObject(jsonData[0]);
-                PathJSONParser parser = new PathJSONParser();
+                DirectionsJSONParser parser = new DirectionsJSONParser();
+
+                // Starts parsing data
                 routes = parser.parse(jObject);
-
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return routes;
         }
 
+        // Executes in UI thread, after the parsing process
         @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
+        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
             ArrayList<LatLng> points = null;
-            PolylineOptions polyLineOptions = null;
+            PolylineOptions lineOptions = null;
+            MarkerOptions markerOptions = new MarkerOptions();
+            String distance = "";
+            String duration = "";
 
-            // traversing through routes
-            for (int i = 0; i < routes.size(); i++) {
+
+            if (result.size() < 1) {
+                Toast.makeText(getBaseContext(), "No Points", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+
+            // Traversing through all the routes
+            for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList<LatLng>();
-                polyLineOptions = new PolylineOptions();
-                List<HashMap<String, String>> path = routes.get(i);
+                lineOptions = new PolylineOptions();
 
+                // Fetching i-th route
+                List<HashMap<String, String>> path = result.get(i);
+
+                // Fetching all the points in i-th route
                 for (int j = 0; j < path.size(); j++) {
                     HashMap<String, String> point = path.get(j);
+
+                    if (j == 0) {    // Get distance from the list
+                        distance = (String) point.get("distance");
+                        continue;
+                    } else if (j == 1) { // Get duration from the list
+                        duration = (String) point.get("duration");
+                        continue;
+                    }
 
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
@@ -546,27 +767,29 @@ public class MapDemoActivity extends AppCompatActivity {
                     points.add(position);
                 }
 
-                polyLineOptions.addAll(points);
-                polyLineOptions.width(10);
-                polyLineOptions.color(Color.BLACK);
+                // Adding all the points in the route to LineOptions
+                lineOptions.addAll(points);
+                lineOptions.width(2);
+                lineOptions.color(Color.BLACK);
 
             }
 
-            if (polyLineOptions != null) {
-                map.addPolyline(polyLineOptions);
-            }
+            distanceaway.setText("Distance:" + distance + ", Duration:" + duration);
+
+            Log.e("Distancebetween", " " + distance);
 
 
+            // Drawing polyline in the Google Map for the i-th route
+            map.addPolyline(lineOptions);
         }
     }
+
 
     public static void animateMarker(final Location destination, final Marker marker) {
         if (marker != null) {
             final LatLng startPosition = marker.getPosition();
             final LatLng endPosition = new LatLng(destination.getLatitude(), destination.getLongitude());
-
             final float startRotation = marker.getRotation();
-
             final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
             valueAnimator.setDuration(1000); // duration 1 second
@@ -631,6 +854,23 @@ public class MapDemoActivity extends AppCompatActivity {
 
         if (!TextUtils.isEmpty(email))
             mFirebaseDatabase.child(userId).child("log").setValue(email);
+    }
+
+    private void redrawLine() {
+
+        map.clear();  //clears all Markers and Polylines
+
+        PolylineOptions options = new PolylineOptions().width(3).color(Color.BLACK).geodesic(true);
+        for (int i = 0; i < points.size(); i++) {
+            LatLng point = points.get(i);
+            options.add(point);
+        }
+        //add Marker in current position
+
+
+        map.addMarker(new MarkerOptions().position(new LatLng(lati, lng)));
+
+        line = map.addPolyline(options); //add Polyline
     }
 
 }
