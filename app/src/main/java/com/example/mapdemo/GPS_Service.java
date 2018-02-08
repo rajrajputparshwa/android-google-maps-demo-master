@@ -103,27 +103,33 @@ public class GPS_Service extends Service implements GoogleApiClient.ConnectionCa
                 } else {
                     mFirebaseInstance = FirebaseDatabase.getInstance();
 
-                    mFirebaseDatabase = mFirebaseInstance.getReference("cars");
+                    mFirebaseDatabase = mFirebaseInstance.getReference("cars").child("driverAvailable");
 
                     GeoFire geoFire = new GeoFire(mFirebaseDatabase);
                     geoFire.setLocation(name, new GeoLocation(location.getLatitude(), location.getLongitude()));
 
-/*
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("detail").setValue("11");
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("car").setValue("11");
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("carModel").setValue("11");
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("lat").setValue(location.getLatitude());
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("lng").setValue(location.getLongitude());
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("bearing").setValue(location.getBearing());
+
+                    mFirebaseInstance.getReference("cars").child("driverDetail").child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
 
 
-                    mFirebaseDatabase.child(name).child("bearing").setValue(location.getBearing());
-
-                    mFirebaseDatabase.child(name).child("speed").setValue(((location.getSpeed() * 3600) / 1000));
-
-*/
-
-                    Log.e("latitude", " " + location.getLatitude());
+                    /*Log.e("latitude", " " + location.getLatitude());
 
                     Log.e("logitude", " " + location.getLongitude());
 
                     Log.e("Bearing", " " + location.getBearing());
 
-                    Log.e("Speed", " " + ((location.getSpeed() * 3600) / 1000));
+                    Log.e("Speed", " " + ((location.getSpeed() * 3600) / 1000));*/
 
             /*    String msg = "Updated Locations : " +
                         Double.toString(location.getLatitude()) + "," +

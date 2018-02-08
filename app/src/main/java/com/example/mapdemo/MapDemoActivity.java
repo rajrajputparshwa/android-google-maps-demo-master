@@ -17,11 +17,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -48,8 +51,12 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -78,17 +85,13 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
     private DatabaseReference mFirebaseDatabase;
     private FirebaseDatabase mFirebaseInstance;
     public String userId;
-    String token;
     Pref_Master pref_master;
-    Location getmCurrentLocation;
     String userName;
     Context context = this;
     Location destination;
     LocationManager locationManager;
-    Button distanceaway, start, stop;
+    Button distanceaway, start, stop, speed;
     GoogleApiClient mGoogleApiClient;
-    LatLng latLng;
-    List<LatLng> routePoints;
     private ArrayList<LatLng> points; //added
     Polyline line; //added
     Double lati, lng;
@@ -96,7 +99,11 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
     Location newlocation, oldlocation;
     int startcalculate = 0;
     float olddistance;
-
+    RecyclerView chat;
+    DriverAdapter chatRecyclerAdapter;
+    EditText msg;
+    ArrayList<Chat> chatArrayList = new ArrayList<>();
+    Button sendbtn;
 
     private final static String KEY_LOCATION = "location";
 
@@ -122,7 +129,11 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
         start = findViewById(R.id.start);
         stop = findViewById(R.id.stop);
         markerCount = 0;
+        chat = findViewById(R.id.chat);
         pref_master = new Pref_Master(context);
+        speed = findViewById(R.id.speed);
+        msg = findViewById(R.id.sendmsg);
+        sendbtn = findViewById(R.id.sendbtn);
 
         userName = pref_master.getUID();
         points = new ArrayList<LatLng>(); //added
@@ -130,6 +141,25 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
         stop.setVisibility(View.GONE);
         distanceaway.setVisibility(View.GONE);
         start.setVisibility(View.GONE);
+
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(context);
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        chat.setLayoutManager(layoutManager);
+
+
+        chatRecyclerAdapter = new DriverAdapter(context, chatArrayList);
+        chat.setAdapter(chatRecyclerAdapter);
+
+
+        getMessage();
+
+        sendbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessage();
+            }
+        });
 
         start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +171,7 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
                 drawline = true;
 
                 start.setVisibility(View.GONE);
+
             }
         });
 
@@ -154,8 +185,11 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
                 ReadTask downloadTask = new ReadTask();
                 // Start downloading json data from Google Directions API
                 downloadTask.execute(url);*/
+
+                drawline = false;
+
+                map.addMarker(new MarkerOptions().position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
                 stop.setVisibility(View.GONE);
-                distanceaway.setVisibility(View.VISIBLE);
 
             }
         });
@@ -207,8 +241,7 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
                             destination = new Location("");
                             destination.setLatitude(latLng.latitude);
                             destination.setLongitude(latLng.longitude);
-                            map.addMarker(new MarkerOptions()
-                                    .position(new LatLng(latLng.latitude, latLng.longitude))
+                            map.addMarker(new MarkerOptions().position(new LatLng(latLng.latitude, latLng.longitude))
                             );
                        /*     String url = getMapsApiDirectionsUrl(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()), new LatLng(latLng.latitude, latLng.longitude));
                             ReadTask downloadTask = new ReadTask();
@@ -305,7 +338,11 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
         // If Google Play services is available
         if (ConnectionResult.SUCCESS == resultCode) {
             // In debug mode, log the status
-            Log.d("Location Updates", "Google Play services is available.");
+            Log.d("" +
+                    "" +
+                    "" +
+                    "" +
+                    "", "Google Play services is available.");
             return true;
         } else {
             // Get the error dialog from Google Play services
@@ -397,7 +434,7 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
             LatLng latlngOne = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
 
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 20);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
             map.setBuildingsEnabled(true);
             map.setMapStyle(
@@ -406,19 +443,19 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
 
 
             animateMarker(location, mk);
-
+            speed.setText(" " + ((location.getSpeed() * 3600) / 1000));
 
         } else if (markerCount == 0) {
 
 
             Intent i = new Intent(getApplicationContext(), GPS_Service.class);
             startService(i);
-
-
             mCurrentLocation = location;
             String msg = "Updated Locationsss: " +
                     Double.toString(location.getLatitude()) + "," +
                     Double.toString(location.getLongitude());
+
+            speed.setText(" " + ((location.getSpeed() * 3600) / 1000));
 /*
             mFirebaseInstance = FirebaseDatabase.getInstance();
 
@@ -459,21 +496,15 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
             }
             map.setMyLocationEnabled(true);
      /*       map.addMarker(new MarkerOptions().position(new LatLng(23.6133995, 72.4082554)).title("home"));*/
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 20);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latlngOne, 18);
             map.animateCamera(cameraUpdate);
             map.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             context, R.raw.map_style));
-
-
             Toast.makeText(this, msg, Toast.LENGTH_SHORT)
                     .show();
             markerCount = 1;
-
-
         }
-
-
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -488,11 +519,7 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
-
                 if (drawline) {
-
-
                     if (startcalculate == 1) {
                         newlocation = new Location("");
                         newlocation.setLatitude(location.getLatitude());
@@ -503,7 +530,12 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
 
                         Log.e("Newlocation", " " + newlocation);
                         Log.e("OLdlocation", " " + oldlocation);
-                        Log.e("Distance", " " + olddistance);
+                        Log.e("Distance", " " + olddistance / 1000);
+                        Log.e("Speed", " " + ((location.getSpeed() * 3600) / 1000));
+
+                        distanceaway.setVisibility(View.VISIBLE);
+                        stop.setVisibility(View.VISIBLE);
+                        distanceaway.setText("Distance :" + olddistance / 1000);
 
 
                     }
@@ -534,16 +566,11 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
                     points.add(latLng); //added
 
                     start.setVisibility(View.GONE);
-                    stop.setVisibility(View.GONE);
 
+                    redrawLine();//added
                     redrawLine();//added
                     startcalculate = 1;
                 }
-
-
-
-
-
 
                 /*if (destination != null) {
                     float d = location.distanceTo(destination);
@@ -552,8 +579,6 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
                 }*/
 
    /*
-
-
                 LatLng mapPoint = new LatLng(location.getLatitude(), location.getLongitude());
                 routePoints.add(mapPoint);
                 Polyline route = map.addPolyline(new PolylineOptions());
@@ -870,7 +895,58 @@ public class MapDemoActivity extends AppCompatActivity implements GoogleApiClien
 
         map.addMarker(new MarkerOptions().position(new LatLng(lati, lng)));
 
+
         line = map.addPolyline(options); //add Polyline
+    }
+
+    private void sendMessage() {
+        chatArrayList.clear();
+        String message = msg.getText().toString();
+        String receiver = "1";
+        String receiverUid = "1UID";
+        String sender = pref_master.getUID();
+        String senderUid = pref_master.getUID();
+        Chat chat = new Chat(sender,
+                receiver,
+                senderUid,
+                receiverUid,
+                message,
+                System.currentTimeMillis());
+
+        FirebaseDatabase.getInstance().getReference("cars").child("trip").child("tripID1").child("msg").child(String.valueOf(System.currentTimeMillis())).setValue(chat);
+
+
+        /*chatRecyclerAdapter.notifyDataSetChanged();
+*/
+
+    }
+
+
+    private void getMessage() {
+        FirebaseDatabase.getInstance().getReference("cars").child("trip").child("tripID1").child("msg").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                chatArrayList.clear();
+                for (DataSnapshot chilSnapshot : dataSnapshot.getChildren()) {
+
+                    Log.e("Valueee", "" + chilSnapshot.child("message").getValue());
+
+                    Chat chat = new Chat();
+                    chat.setMessage(String.valueOf(chilSnapshot.child("message").getValue()));
+                    chatArrayList.add(chat);
+                    chatRecyclerAdapter.notifyDataSetChanged();
+
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }
